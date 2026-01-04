@@ -126,18 +126,23 @@ class Client:
             data = pickle.loads(raw)
             expected_type = CLASS_MAP.get(cls)
 
-            if not isinstance(data, list):
-                raise TypeError(
-                    f"Oczekiwano kolekcji (listy), otrzymano {type(data).__name__}"
-                )
+            if isinstance(data, list):
+                for obj in data:
+                    if not isinstance(obj, expected_type):
+                        raise TypeError(
+                            f"Nie można zrzutować {type(obj).__name__} "
+                            f"na {expected_type.__name__}"
+                        )
+                    print(f"[client {self.client_id}] {obj}")
+                return
 
-            for obj in data:
-                if not isinstance(obj, expected_type):
-                    raise TypeError(
-                        f"Nie można zrzutować {type(obj).__name__} "
-                        f"na {expected_type.__name__}"
-                    )
-                print(f"[client {self.client_id}] {obj}")
+            if isinstance(data, expected_type):
+                print(f"[client {self.client_id}] (pojedynczy) {data}")
+                return
+
+            raise TypeError(
+                f"Nie można zrzutować {type(data).__name__} na {expected_type.__name__}"
+            )
 
         except Exception as e:
             print(f"[client {self.client_id}] BŁĄD ({cls}): {e}")

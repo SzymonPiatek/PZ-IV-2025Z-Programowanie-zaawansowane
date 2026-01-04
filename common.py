@@ -30,8 +30,16 @@ def recv_json(sock: socket.socket) -> dict:
     :return: Decoded JSON object as a dictionary
     """
 
-    size = struct.unpack("!I", sock.recv(4))[0]
+    header = sock.recv(4)
+    if not header:
+        raise ConnectionError("Client disconnected")
+
+    size = struct.unpack("!I", header)[0]
+
     payload = sock.recv(size)
+    if not payload:
+        raise ConnectionError("Client disconnected")
+
     return json.loads(payload.decode())
 
 

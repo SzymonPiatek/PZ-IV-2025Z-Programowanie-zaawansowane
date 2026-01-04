@@ -57,7 +57,11 @@ def handle_client(conn: socket.socket, addr):
         print(f"[CONNECTED] client {client_id} from {client_ip}:{client_port}")
 
         while True:
-            req = recv_json(conn)
+            try:
+                req = recv_json(conn)
+            except ConnectionError:
+                break
+
             if req["type"] == "BYE":
                 break
 
