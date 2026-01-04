@@ -7,6 +7,18 @@ from data import HOST, PORT, CLASS_MAP
 
 
 class ClientIdCounter:
+    """
+    Persistent client ID generator.
+
+    This class is responsible for generating unique client identifiers
+    that persist across multiple executions of the client program.
+    The identifier value is stored in a local file, which allows the
+    counter to survive process termination.
+
+    This mechanism is conceptually equivalent to a static counter used
+    in the Entity class on the server side, but with persistence.
+    """
+
     FILE = ".client_counter"
 
     @classmethod
@@ -33,6 +45,17 @@ class Client:
         self.socket: socket.socket | None = None
 
     def connect(self) -> None:
+        """
+        Establishes a connection with the server.
+
+        Sends the client ID to the server and receives a connection status.
+        If the server responds with REFUSED, the client terminates execution.
+        If the response is OK, the client enters an active session.
+
+        :raises SystemExit: If the connection is refused.
+        :raises RuntimeError: If an unknown server status is received.
+        """
+
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((HOST, PORT))
 
@@ -52,17 +75,48 @@ class Client:
         print(f"[client {self.client_id}] STATUS = OK – połączono")
 
     def show_menu(self) -> None:
+        """
+        Displays the interactive menu options to the user.
+
+        Available options:
+        - display available classes,
+        - request an object collection,
+        - terminate the client session.
+        """
+
         print("\n=== MENU ===")
         print("1. Wyświetl spis klas")
         print("2. Poproś o mapę obiektów")
         print("3. Zakończ sesję")
 
     def show_classes(self) -> None:
+        """
+        Displays the list of available object classes
+        that can be requested from the server.
+        """
+
         print("\nDostępne klasy:")
         for cls in CLASS_MAP.keys():
             print(f"- {cls}")
 
     def request_objects(self, cls: str) -> None:
+        """
+        Requests a collection of objects of a given class from the server.
+
+        The method:
+        - sends a request specifying the class name,
+        - receives serialized data from the server,
+        - deserializes the data,
+        - validates the received object types,
+        - prints the objects in a streaming manner.
+
+        If the server sends an object of an unexpected type,
+        the method handles the type casting error as required
+        by the project specification.
+
+        :param cls: Name of the requested class (lowercase)
+        """
+
         assert self.socket is not None
 
         send_json(self.socket, {"type": "GET", "class": cls})
@@ -89,6 +143,14 @@ class Client:
             print(f"[client {self.client_id}] BŁĄD ({cls}): {e}")
 
     def run(self) -> None:
+        """
+        Starts the client execution.
+
+        After successfully connecting to the server, the client enters
+        an interactive session loop where the user can repeatedly
+        perform actions until choosing to exit.
+        """
+
         self.connect()
 
         while True:
@@ -115,6 +177,13 @@ class Client:
                 print("Nieprawidłowa opcja")
 
     def disconnect(self) -> None:
+        """
+        Gracefully terminates the client session.
+
+        Sends a termination message to the server, closes the socket,
+        and releases all client-side resources.
+        """
+
         if self.socket:
             try:
                 send_json(self.socket, {"type": "BYE"})

@@ -1,3 +1,27 @@
+"""
+This module provides the base `Entity` class for creating named entities
+with unique identifiers based on their type. It also includes specific
+subclasses, `Cat`, `Dog`, and `Human`, each representing a distinct
+entity type.
+
+The identifier `id` is assigned automatically using a per-entity-type
+counter. Counters are stored in the class-level dictionary `_counters`,
+which ensures that each entity type (e.g., cat, dog, human) has its own
+independent sequence of identifiers.
+
+Example:
+    Cat("Mruczek") -> cat_1
+    Cat("Luna") -> cat_2
+    Dog("Reksio") -> dog_1
+    Human("Adam") -> human_1
+
+Each entity provides the `key()` method, which returns a string key in the
+following format:
+
+    <entity_type>_<id>
+"""
+
+
 class Entity:
     _counters = {}
 
